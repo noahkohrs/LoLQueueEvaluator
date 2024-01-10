@@ -1,0 +1,6 @@
+riotwatcher
+pandas
+termcolor
+colorama
+python-dotenv
+scipy
