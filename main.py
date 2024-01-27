@@ -38,8 +38,11 @@ def calculateAction():
     n: int = int(sessions_spinbox.get())
     starting_game: int = int(starting_game_spinbox.get())
     tag = player_name + "-" + str(n) + "-" + str(starting_game)
-
-    WinLoss = calculateWins(player_name, n, starting_game)
+    try:
+        WinLoss = calculateWins(player_name, n, starting_game)
+    except:
+        messagebox.showerror("Error", "Please verify that you have entered a valid key in the .env file and that the player name is correct")
+        return
     AllyWinrate = WinLoss[0]/(n*n*4)*100
     EnemyWinrate = WinLoss[1]/(n*n*5)*100
     BinAlly = calculateBinomialProbability(WinLoss[0], n*n*4)
@@ -49,17 +52,17 @@ def calculateAction():
     FinalResult = calculateBinomialProbability(cumulativeSuccesses, totalNumberOfGames)
 
     Conclusion = "\n"
-    if FinalResult < 0.01:
+    if FinalResult < 0.006:
         if cumulativeSuccesses >= (n*n*9)*0.5:
             Conclusion = "You litteraly can't lose next game"
         else:
             Conclusion = "Wtf these game were wild 💀💀💀"
-    elif FinalResult < 0.1:
+    elif FinalResult < 0.07:
         if cumulativeSuccesses >= (n*n*9)*0.5:
             Conclusion = "You're surely in winner's queue"
         else:
             Conclusion = "You're surely in looser's queue"
-    elif FinalResult < 0.22:
+    elif FinalResult < 0.2:
         if cumulativeSuccesses >= (n*n*9)*0.5:
             Conclusion = "You're probably in winner's queue"
         else:
@@ -99,7 +102,7 @@ root.title("LoL Queue Calculator")
 main_frame = tk.Frame(root)
 main_frame.pack(fill=tk.BOTH, expand=True)
 
-# Create a PanedWindow widget as a container for the input and result sections
+# PanedWindow
 paned_window = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
 paned_window.pack(fill=tk.BOTH, expand=True)
 
@@ -115,15 +118,15 @@ player_name_entry = tk.Entry(input_frame)
 player_name_entry.pack()
 
 # Number of sessions input
-sessions_label = tk.Label(input_frame, text="Number of sessions :")
+sessions_label = tk.Label(input_frame, text="Number of game recursions :")
 sessions_label.pack()
-sessions_spinbox = tk.Spinbox(input_frame, from_=1, to=7)
+sessions_spinbox = tk.Spinbox(input_frame, from_=1, to=5)
 sessions_spinbox.pack()
 
 # Starting game input
 starting_game_label = tk.Label(input_frame, text="From which game :")
 starting_game_label.pack()
-starting_game_spinbox = tk.Spinbox(input_frame, from_=0, to=7)
+starting_game_spinbox = tk.Spinbox(input_frame, from_=0, to=10)
 starting_game_spinbox.pack()
 
 # Calculate button
