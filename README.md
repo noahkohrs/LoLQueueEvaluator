@@ -3,13 +3,6 @@
 ## Overview
 This Python tool is designed for League of Legends (LoL) players to analyze the concept of winner and loser queues. It calculates and interprets history to determine if a player is likely in a winner's queue (where the chances of winning are higher due to various factors) or a loser's queue (where the opposite is true). By assessing recent game statistics such as win rates, team performance, and player behaviors, the tool aims to provide insights into a player's current matchmaking status.
 
-## Features
-- **Winrate Analysis:** Calculates and displays the winrate of allies and enemies in the player's last few games.
-
-- **Player Death Analysis:** Identifies whether the player had the teammate who died the most in recent matches.
-
-- **API Call Management:** Efficiently manages API calls to avoid overloading with built-in sleep timers.
-
 ## Installation
 
 1. Clone the repository:
@@ -31,7 +24,7 @@ Thanks to [Riot Games](https://developer.riotgames.com/) for providing the API u
 
 ## Usage
 
-Run the script and follow the on-screen prompts to input the player's name, the number of games for analysis, and the starting game number for calculation.
+Run the script and interact with the GUI.
 
 Example:
 ```python
