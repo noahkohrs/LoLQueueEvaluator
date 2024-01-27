@@ -5,6 +5,8 @@ import time
 from termcolor import colored, cprint
 from colorama import Fore as c
 from datetime import datetime
+import requests
+
 # Load env variables
 import os
 from dotenv import load_dotenv
@@ -25,7 +27,7 @@ def Call():
     """Avoid overloading the API"""
     global CallCounter, watcher, debug
     CallCounter += 1
-    if CallCounter%100==0 :
+    if CallCounter%120==0 :
         time.sleep(60)
         if debug : print("Waiting 60 seconds")
     elif CallCounter%20==0 :
@@ -46,8 +48,6 @@ def getSoloQueueListByPuuid(puuid):
         Call()
     return database[id]
 
-
-
 def getMatchDetailsById(match):
     global database
     id = "MatchDetails:"+match
@@ -56,11 +56,16 @@ def getMatchDetailsById(match):
         Call()
     return database[id]
 
-def getSummonerByName(name):
+def watcher_accounts_by_riot_id(region, name, tag):
+    url = f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}"
+    response = requests.get(url, headers={"X-Riot-Token": api_key})
+    return response.json()
+
+def getSummonerByRiotID(name, tag):
     global database
     id = "Summoner:"+name
     if DataIsUnknown(id) :
-        database[id] = watcher.summoner.by_name("euw1", name)
+        database[id] = watcher_accounts_by_riot_id("europe", name, tag)
         Call()
     return database[id]
 
@@ -107,7 +112,7 @@ def PlayerWonTheGame(match_detail, puuid):
     else:
         return match_detail["info"]["teams"][1]["win"]
 
-def PlayerWinrate(player, n, timing): # player = player watcher
+def PlayerNumberOfWins(player, n, timing): # player = player watcher
     matches = getSoloQueueListByPuuidAndTimestamp(player['puuid'], timing)
     win = 0
     for i in range(0,min(len(matches),n)) : 
@@ -116,7 +121,7 @@ def PlayerWinrate(player, n, timing): # player = player watcher
             win+=1
 
 
-    return win/n
+    return win
 
 def ColorChoicer(winrate):
     #4 stats : 0-25, 25-50, 50-75, 75-100
@@ -150,16 +155,16 @@ def TotalPings(match_detail, player_j):
 
 
 # Main functions
-def PlayersWinratesLastGames(player, N : int, wantedGameNumber : int):
+def PlayersWinsLastGames(playerName, playerTag, N : int, wantedGameNumber : int):
     init_Calc()
 
     start_time = time.time()
     debug = True
-    me = getSummonerByName(player)
+    me = getSummonerByRiotID(playerName, playerTag)
     matches = getSoloQueueListByPuuid(me['puuid'])
     
-    winrate_allies=0
-    winrate_enemies=0
+    wins_allies=0
+    wins_enemies=0
 
 
     for i in range(wantedGameNumber, N+wantedGameNumber):
@@ -173,47 +178,48 @@ def PlayersWinratesLastGames(player, N : int, wantedGameNumber : int):
         for j in range(0, 5):
             if j != me_index:
                 p = getSummonerByPuuid(match_detail["metadata"]["participants"][j])
-                x=PlayerWinrate(p, N, timingOfTheGame)
+                x=PlayerNumberOfWins(p, N, timingOfTheGame)
                 win_b.append(x)
 
         for j in range(5, 10):
             if j != me_index:
                 p = getSummonerByPuuid(match_detail["metadata"]["participants"][j])              
-                x=PlayerWinrate(p, N,timingOfTheGame)
+                x=PlayerNumberOfWins(p, N,timingOfTheGame)
                 win_r.append(x)              
         
         if debug: print("Game %d" % i)
+
         if PlayerInBlueTeam(match_detail,me["puuid"]):
-            
-            ActualAllyWinrate =(sum(win_b)/4)*100
-            ActualEnemyWinrate =(sum(win_r)/5)*100
+            ActualAllyWins =sum(win_b)
+            ActualEnemyWins=sum(win_r)
         else:
-            ActualAllyWinrate=(sum(win_r)/4)*100
-            ActualEnemyWinrate=(sum(win_b)/5)*100
+            ActualAllyWins=sum(win_r)
+            ActualEnemyWins=sum(win_b)
         
-        winrate_allies+=ActualAllyWinrate
-        winrate_enemies+=ActualEnemyWinrate
+        wins_allies+=ActualAllyWins
+        wins_enemies+=ActualEnemyWins
+
+        ActualAllyWinrate = (ActualAllyWins/(N*4))*100
+        ActualEnemyWinrate = (ActualEnemyWins/(N*5))*100
 
         AllyC=ColorChoicer(ActualAllyWinrate)
         EnemyC=ColorChoicer(ActualEnemyWinrate)
+
         if debug : print(AllyC+"Your team's winrate: %.2f" % ActualAllyWinrate)
         if debug : print(EnemyC+"Enemy team's winrate: %.2f\n" % ActualEnemyWinrate + c.RESET)
-        
-        # MultiKeys Options
-        # ChangeKey()
-        # me = getSummonerByName(player)
+
     if debug :
         print("Number of API calls: %d" % CallCounter)
         print("Execution time: %s seconds" % (time.time() - start_time))
 
-    return(round((winrate_allies/N),2), round((winrate_enemies/N),2))
+    return (wins_allies, wins_enemies)
 
 
 
 
-def TotalPingsLastGames(player, N : int, wantedGameNumber : int):
+def TotalPingsLastGames(playerName, playerTag, N : int, wantedGameNumber : int):
 
-    me = getSummonerByName(player)
+    me = getSummonerByRiotID(playerName, playerTag)
     matches = getSoloQueueListByPuuid(me['puuid'])
     pings_allies=0
     pings_enemies=0
@@ -248,10 +254,10 @@ def TotalPingsLastGames(player, N : int, wantedGameNumber : int):
     return (pings_allies, pings_enemies)
                       
 
-def PlayerHasThePlayerWhoDiedTheMostInLastsMatches(player, N, wantedGameNumber):
+def PlayerHasThePlayerWhoDiedTheMostInLastsMatches(playerName, playerTag, N, wantedGameNumber):
 
     debug = True
-    me = getSummonerByName(player)
+    me = getSummonerByRiotID(playerName, playerTag)
     matches = getSoloQueueListByPuuid(me['puuid'])
 
     totalAlly = 0
@@ -292,9 +298,6 @@ def PlayerHasThePlayerWhoDiedTheMostInLastsMatches(player, N, wantedGameNumber):
         print(EnemyC+"Winrate of the enemy team: %.2f\n" %
               RatioEnemy + c.RESET)
 
-      # MultiKeys Options
-      # ChangeKey()
-      # me = getSummonerByName(player)
     if debug:
         print("Number of API calls: %d" % CallCounter)
 
