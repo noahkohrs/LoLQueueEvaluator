@@ -64,7 +64,6 @@ def PlayerWonTheGame(match_detail, puuid):
         return match_detail["info"]["teams"][1]["win"]
 
 def PlayerNumberOfWins(player_puuid, n, timing):
-    print(timing)
     matches = getSoloQueueListByPuuid(player_puuid, from_timestamp = timing, count = n)
 
     win = 0
