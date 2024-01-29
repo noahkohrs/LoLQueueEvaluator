@@ -38,11 +38,11 @@ def calculateAction():
     n: int = int(sessions_spinbox.get())
     starting_game: int = int(starting_game_spinbox.get())
     tag = player_name + "-" + str(n) + "-" + str(starting_game)
-    try:
-        WinLoss = calculateWins(player_name, n, starting_game)
-    except:
-        messagebox.showerror("Error", "Please verify that you have entered a valid key in the .env file and that the player name is correct")
-        return
+    # try:
+    WinLoss = calculateWins(player_name, n, starting_game)
+    # except:
+    #     messagebox.showerror("Error", "Please verify that you have entered a valid key in the .env file and that the player name is correct")
+    #     return
     AllyWinrate = WinLoss[0]/(n*n*4)*100
     EnemyWinrate = WinLoss[1]/(n*n*5)*100
     BinAlly = calculateBinomialProbability(WinLoss[0], n*n*4)

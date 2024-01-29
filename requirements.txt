@@ -1,4 +1,3 @@
-riotwatcher
 pandas
 termcolor
 colorama
