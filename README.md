@@ -14,16 +14,23 @@ This Python tool is designed for League of Legends (LoL) players to analyze the 
    ```bash
    pip install -r requirements.txt
    ```
-3. Set up `.env` file with your Riot Games API key:
+3. Set up `.env` file with your Riot Games API key
+   
+   First, create a file named `.env` in the root directory of the project.
+   Then, add the following line to the file, replacing `<your-api-key-here>` with your Riot Games API key :
    ```
    YOUR_LOL_API_KEY='<your-api-key-here>'
    ```
+
+   *Note* : You can get your API key from [Riot Games](https://developer.riotgames.com/)
+
+   *Warning* : The standard api key lasts for 24 hours, so you will need to replace it every day. 
 
 ## Usage
 
 Run the script.
 
-Example:
+Example :
 ```python
 python main.py
 ```
@@ -46,8 +53,10 @@ Thanks to [Riot Games](https://developer.riotgames.com/) for providing the API u
 
 ## Disclaimers
 
-This is a prototype and is not intended for serious use.
+- This is a prototype and is not intended for serious use.
 
-This project only currently works for EUW players. Feel free to fork and add support for other regions.
+- The analysis could take several minutes to run due to the rate limits of the Riot Games API.
 
-This is a personal project and is not endorsed by Riot Games. It is created for educational purposes.
+- This project only currently works for EUW players. Feel free to fork and add support for other regions.
+
+- This is a personal project and is not endorsed by Riot Games. It is created for educational purposes.
