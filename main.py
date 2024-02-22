@@ -12,14 +12,14 @@ try:
 except FileNotFoundError:
     history = {}
 
-def calculateWins(player, n, wanted_game):
+def calculateWins(player, region, n, wanted_game):
     riotID = player.split('#')
     playerName = riotID[0]
     try :
         playerTag = riotID[1]
     except IndexError:
         playerTag = "EUW"
-    return PlayersWinsLastGames(playerName, playerTag, n, wanted_game)
+    return PlayersWinsLastGames(playerName, playerTag, region, n, wanted_game)
 
 
 def calculateBinomialProbability(success, n):
@@ -38,8 +38,9 @@ def calculateAction():
     n: int = int(sessions_spinbox.get())
     starting_game: int = int(starting_game_spinbox.get())
     tag = player_name + "-" + str(n) + "-" + str(starting_game)
+    region = region_map[region_selector.cget("text")]
     # try:
-    WinLoss = calculateWins(player_name, n, starting_game)
+    WinLoss = calculateWins(player_name, region, n, starting_game)
     # except:
     #     messagebox.showerror("Error", "Please verify that you have entered a valid key in the .env file and that the player name is correct")
     #     return
@@ -122,6 +123,17 @@ sessions_label = tk.Label(input_frame, text="Number of game recursions :")
 sessions_label.pack()
 sessions_spinbox = tk.Spinbox(input_frame, from_=1, to=5)
 sessions_spinbox.pack()
+
+# Wanted region between europe, america, asia
+region_map = {
+    "EUW"   : "europe",
+    "NA"    : "americas",
+    "ASIA"  : "asia"
+}
+# Selector for the region
+region_selector = tk.OptionMenu(input_frame, tk.StringVar(value="EUW"), *region_map.keys())
+
+region_selector.pack()
 
 # Starting game input
 starting_game_label = tk.Label(input_frame, text="From which game :")

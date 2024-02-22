@@ -15,9 +15,8 @@ def load_api_key():
 
 def init_Calc() :
     """Initialize the global variables"""
-    global api_key, my_region, CallCounter, debug, database
+    global api_key, CallCounter, debug, database
     api_key = load_api_key()
-    my_region = "europe"
     CallCounter = 0
     debug = False
     database = {}
@@ -29,27 +28,27 @@ def DataIsUnknown(arg) :
     return not (arg in database.keys())
 
 # Getters
-def getSoloQueueListByPuuid(puuid, region="europe", from_timestamp = 0, count = 20):
+def getSoloQueueListByPuuid(puuid, region, from_timestamp = 0, count = 20):
     global api_key, CallCounter
     res = api.matchlist_by_puuid(api_key, region, puuid, 0)
     CallCounter+=1
     return res
 
-def getMatchDetailsById(match):
+def getMatchDetailsById(match, region):
     global api_key, CallCounter
-    res = api.match_by_id(api_key, "europe", match)
+    res = api.match_by_id(api_key, region, match)
     CallCounter+=1
     return res
 
-def getSummonerByRiotID(name, tag):
+def getSummonerByRiotID(name, tag, region):
     global api_key, CallCounter
-    res = api.account_by_riot_id(api_key, "europe", name, tag)
+    res = api.account_by_riot_id(api_key, region, name, tag)
     CallCounter+=1
     return res
 
-def getSummonerByPuuid(puuid):
+def getSummonerByPuuid(puuid, region):
     global api_key, CallCounter
-    res = api.account_by_puuid(api_key, "europe", puuid)
+    res = api.account_by_puuid(api_key, region, puuid)
     CallCounter+=1
     return res
 
@@ -63,12 +62,12 @@ def PlayerWonTheGame(match_detail, puuid):
     else:
         return match_detail["info"]["teams"][1]["win"]
 
-def PlayerNumberOfWins(player_puuid, n, timing):
-    matches = getSoloQueueListByPuuid(player_puuid, from_timestamp = timing, count = n)
+def PlayerNumberOfWins(player_puuid, region, n, timing):
+    matches = getSoloQueueListByPuuid(player_puuid, region, from_timestamp = timing, count = n)
 
     win = 0
     for i in range(0,min(len(matches),n)) : 
-        match_detail = getMatchDetailsById(matches[i])
+        match_detail = getMatchDetailsById(matches[i], region)
         if PlayerWonTheGame(match_detail, player_puuid):
             win+=1
     return win
@@ -98,14 +97,15 @@ def FinalColorChoicer(winrate):
         return c.BLUE
 
 
-def PlayersWinsLastGames(playerName, playerTag, N : int, wantedGameNumber : int):
+def PlayersWinsLastGames(playerName, playerTag, region: str, N : int, wantedGameNumber : int):
     init_Calc()
-
-    start_time = time.time()
     debug = True
-    me = getSummonerByRiotID(playerName, playerTag)
+    if debug:
+        print("Selected Region : %s" % region)
+    start_time = time.time()
+    me = getSummonerByRiotID(playerName, playerTag, region)
 
-    matches = getSoloQueueListByPuuid(me['puuid'], count = N+wantedGameNumber)
+    matches = getSoloQueueListByPuuid(me['puuid'], region, count = N+wantedGameNumber)
 
     wins_allies=0
     wins_enemies=0
@@ -115,7 +115,7 @@ def PlayersWinsLastGames(playerName, playerTag, N : int, wantedGameNumber : int)
         win_b=[]
         win_r=[]
 
-        match_detail = getMatchDetailsById(matches[i])
+        match_detail = getMatchDetailsById(matches[i], region)
         me_index = match_detail["metadata"]["participants"].index(me['puuid'])
         timingOfTheGame = match_detail["info"]["gameEndTimestamp"]
 
@@ -123,14 +123,14 @@ def PlayersWinsLastGames(playerName, playerTag, N : int, wantedGameNumber : int)
             if j != me_index:
                 currentPlayerPuuid = match_detail["metadata"]["participants"][j]
 
-                x = PlayerNumberOfWins(currentPlayerPuuid, N, int(timingOfTheGame/1000))
+                x = PlayerNumberOfWins(currentPlayerPuuid, region, N, int(timingOfTheGame/1000))
                 win_b.append(x)
 
         for j in range(5, 10):
             if j != me_index:
                 currentPlayerPuuid = match_detail["metadata"]["participants"][j]
          
-                x = PlayerNumberOfWins(currentPlayerPuuid, N, int(timingOfTheGame/1000))
+                x = PlayerNumberOfWins(currentPlayerPuuid, region, N, int(timingOfTheGame/1000))
                 win_r.append(x)              
         
         if debug: print("Game %d" % i)
